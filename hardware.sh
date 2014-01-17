@@ -3,31 +3,18 @@
 CURRENT_DIR="${PWD}"
 
 function dividing_line {
-echo "----------------------------" >> "${CURRENT_DIR}"/hardware.out
+echo "-------------------------------------------------------" >> "${CURRENT_DIR}"/hardware.out
 }
 
-function disk_read   {
+function disk_test   {
 dividing_line
 cd /dev
 for d in $(ls|grep sd);
 do
- echo "测试${d}的读速度" 
- echo "测试${d}的读速度" >> "${CURRENT_DIR}"/hardware.out
- sudo hdparm -t /dev/${d} >> "${CURRENT_DIR}"/hardware.out 
+ echo "测试${d}的读写速度" 
+ echo "测试${d}的读写速度" >> "${CURRENT_DIR}"/hardware.out
+ sudo hdparm -Tt /dev/${d} >> "${CURRENT_DIR}"/hardware.out 
 done
-dividing_line
-}
-#测试写速度
-function disk_write {
-dividing_line
-echo $2
-if [ -d "$1" ];then
-cd $1
-echo "测试写速度"
-echo "$2" 
-echo "$2" >> "${CURRENT_DIR}"/hardware.out
-sudo time dd if=/dev/zero bs=1024 count=1000000 of=/1Gb.file >> "${CURRENT_DIR}"/hardware.out 2>&1
-fi
 dividing_line
 }
 
@@ -56,15 +43,39 @@ dividing_line
 }
 
 function cpu_info {
+echo "输出CPU信息"
 dividing_line
 echo " CPU信息" >> "${CURRENT_DIR}"/hardware.out
 cat /proc/cpuinfo | grep "model name" | uniq |awk -F: '/model name/{printf $2}' >> "${CURRENT_DIR}"/hardware.out
+echo "" >>  "${CURRENT_DIR}"/hardware.out
 dividing_line
 }
+
+function memory_info {
+echo "输出内存信息"
+dividing_line
+echo "内存信息" >> "${CURRENT_DIR}"/hardware.out
+sudo dmidecode | grep -P -A 5 "Memory Device" | grep Size | grep -v Range >> "${CURRENT_DIR}"/hardware.out
+
+sudo dmidecode | grep -P 'Maximum\s Capacity'
+dividing_line
+}
+
+function system_infomation {
+echo "输出主板信息"
+dividing_line
+echo "生产公司" >> "${CURRENT_DIR}"/hardware.out
+sudo dmidecode |grep 'Manufacturer' | uniq |awk 'NR==1'|awk -F: '{printf $2}' >>"${CURRENT_DIR}"/hardware.out
+echo "" >> "${CURRENT_DIR}"/hardware.out
+echo "型号" >> "${CURRENT_DIR}"/hardware.out
+sudo dmidecode |grep 'Product Name' | awk -F: '{printf $2}' >> "${CURRENT_DIR}"/hardware.out
+echo "" >>"${CURRENT_DIR}"/hardware.out
+dividing_line
+}
+
 chk_file    
-disk_read   
-disk_write /data "测试阵列卡写速度"   
-disk_write ~  "测试系统盘写速度"   
+disk_test
 hard_disk_info   
 cpu_info   
-dividing_line 
+memory_info
+system_infomation 
