@@ -21,12 +21,13 @@ echo 'install over'
 }
 
 function install_ruby {
-sed -i -e 's/ftp\.ruby-lang\.org\/pub\/ruby/ruby\.taobao\.org\/mirrors\/ruby/g' ~/.rvm/config/db
+sed -i 's!cache.ruby-lang.org/pub/ruby!ruby.taobao.org/mirrors/ruby!' ~/.rvm/config/db
 rvm install 1.9.3
 echo "/bin/bash --login" >> ~/.bashrc
 source ~/.bashrc
-check "ruby -v" "install_ruby"
 rvm use 1.9.3 --default
+gem sources --remove https://rubygems.org/
+gem sources -a http://ruby.taobao.org/
 check "rails -v" "gem install rails"
 }
 
